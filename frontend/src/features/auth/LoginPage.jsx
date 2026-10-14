@@ -125,18 +125,6 @@ export const LoginPage = () => {
               {formik.isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Entrar al Sistema'}
             </Button>
           </form>
-
-          <Box sx={{ mt: 3, p: 1.5, bgcolor: 'background.default', borderRadius: 2, textAlign: 'left' }}>
-            <Typography variant="caption" display="block" fontWeight="bold">
-              Credenciales de prueba aprobadas:
-            </Typography>
-            <Typography variant="caption" display="block">
-              • <strong>Admin:</strong> admin_ferreteria / Admin123*
-            </Typography>
-            <Typography variant="caption" display="block">
-              • <strong>Operativo:</strong> operador_mostrador / Operador123*
-            </Typography>
-          </Box>
         </CardContent>
       </Card>
     </Container>

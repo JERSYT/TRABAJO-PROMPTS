@@ -235,5 +235,25 @@ public class AdminInitializerRunner implements CommandLineRunner {
 
             log.info("Datos de demostración y catálogo de arranque cargados con éxito.");
         }
+
+        // 5. Sanear y asegurar nombres correctos sin problemas de codificación (mojibake)
+        productoRepository.findAll().forEach(p -> {
+            String orig = p.getNombre();
+            String clean = orig
+                    .replace("UÃ±a", "Uña").replace("Uã±a", "Uña")
+                    .replace("PresiÃ³n", "Presión").replace("Presiã³n", "Presión");
+            if (!clean.equals(orig)) {
+                p.setNombre(clean);
+                productoRepository.save(p);
+            }
+        });
+        presentacionRepository.findAll().forEach(pres -> {
+            String orig = pres.getNombre();
+            String clean = orig.replace("GalÃ³n", "Galón").replace("Galã³n", "Galón");
+            if (!clean.equals(orig)) {
+                pres.setNombre(clean);
+                presentacionRepository.save(pres);
+            }
+        });
     }
 }

@@ -36,9 +36,11 @@ import * as Yup from 'yup';
 import apiClient from '../../services/api/apiClient';
 import { formatCurrency, formatQuantity, formatDateTime } from '../../utils/formatters';
 import { useAuth } from '../../app/providers/AuthProvider';
+import { useLanguage } from '../../app/providers/LanguageProvider';
 
 export const InventoryPage = () => {
   const { hasRole } = useAuth();
+  const { t } = useLanguage();
   const isAdmin = hasRole('ROLE_ADMINISTRADOR');
 
   const [saldos, setSaldos] = useState([]);
@@ -154,10 +156,10 @@ export const InventoryPage = () => {
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           <Typography variant="h5" fontWeight="bold">
-            Control de Existencias e Inventario
+            {t('invTitle')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Consulta de saldos en tiempo real, valoración por Costo Promedio Ponderado (CPP) y Kárdex inmutable
+            {t('invSubtitle')}
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
@@ -167,7 +169,7 @@ export const InventoryPage = () => {
             startIcon={<WarningIcon />}
             onClick={() => setSoloBajoStock(!soloBajoStock)}
           >
-            {soloBajoStock ? 'Mostrando Bajo Stock' : 'Filtrar Bajo Stock (<=5)'}
+            {soloBajoStock ? t('showingLowStock') : t('filterLowStock')}
           </Button>
         </Stack>
       </Box>
@@ -179,7 +181,7 @@ export const InventoryPage = () => {
         <TextField
           fullWidth
           size="small"
-          placeholder="Buscar por código de barras o producto..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -197,14 +199,14 @@ export const InventoryPage = () => {
           <Table>
             <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
-                <TableCell><strong>Cód. Barras</strong></TableCell>
-                <TableCell><strong>Artículo Comercial</strong></TableCell>
-                <TableCell><strong>Unidad</strong></TableCell>
-                <TableCell align="right"><strong>Stock Disponible</strong></TableCell>
-                {isAdmin && <TableCell align="right"><strong>Costo Promedio (CPP)</strong></TableCell>}
-                {isAdmin && <TableCell align="right"><strong>Valor Total Stock</strong></TableCell>}
-                <TableCell align="center"><strong>Última Actualización</strong></TableCell>
-                <TableCell align="center"><strong>Operaciones</strong></TableCell>
+                <TableCell><strong>{t('colBarcode')}</strong></TableCell>
+                <TableCell><strong>{t('colDescription')}</strong></TableCell>
+                <TableCell><strong>{t('colUnit')}</strong></TableCell>
+                <TableCell align="right"><strong>{t('colStockAvail')}</strong></TableCell>
+                {isAdmin && <TableCell align="right"><strong>{t('colAvgCost')}</strong></TableCell>}
+                {isAdmin && <TableCell align="right"><strong>{t('colTotalVal')}</strong></TableCell>}
+                <TableCell align="center"><strong>{t('colLastUpdate')}</strong></TableCell>
+                <TableCell align="center"><strong>{t('colOperations')}</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

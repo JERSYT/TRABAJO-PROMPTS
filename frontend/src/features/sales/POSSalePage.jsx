@@ -20,7 +20,6 @@ import {
   CircularProgress,
   Stack,
   Autocomplete,
-  Tooltip,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
@@ -29,9 +28,11 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../services/api/apiClient';
 import { formatCurrency, formatQuantity } from '../../utils/formatters';
+import { useLanguage } from '../../app/providers/LanguageProvider';
 
 export const POSSalePage = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // Estados de clientes y catálogo
   const [clientes, setClientes] = useState([]);
@@ -59,7 +60,6 @@ export const POSSalePage = () => {
         setClientes(cliRes.data.content || []);
         setReferencias(refRes.data.content || []);
 
-        // Seleccionar por defecto el primer cliente si existe
         if (cliRes.data.content?.length > 0) {
           setClienteSeleccionado(cliRes.data.content[0]);
         }
@@ -185,10 +185,10 @@ export const POSSalePage = () => {
     <Box>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" fontWeight="bold">
-          Punto de Venta en Mostrador (Facturación de Contado)
+          {t('posTitle')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Cobro en efectivo (COP), cliente registrado obligatorio y descuento transaccional atómico contra stock negativo (RN-01, RN-05, RN-06)
+          {t('posSubtitle')}
         </Typography>
       </Box>
 
@@ -204,11 +204,11 @@ export const POSSalePage = () => {
               startIcon={<PrintIcon />}
               onClick={() => navigate(`/comprobantes/VENTA/${ventaExitosa.consecutivo}`)}
             >
-              Imprimir Recibo {ventaExitosa.consecutivo}
+              {t('printReceipt')} {ventaExitosa.consecutivo}
             </Button>
           }
         >
-          ¡Venta completada con éxito! Comprobante emitido: <strong>{ventaExitosa.consecutivo}</strong>. Cambio a entregar: <strong>{formatCurrency(ventaExitosa.cambioDevuelto)}</strong>.
+          {t('saleSuccessAlert')} <strong>{ventaExitosa.consecutivo}</strong>. {t('changeAlert')} <strong>{formatCurrency(ventaExitosa.cambioDevuelto)}</strong>.
         </Alert>
       )}
 
@@ -219,7 +219,7 @@ export const POSSalePage = () => {
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3, mb: 3 }} elevation={2}>
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              1. Cliente Registrado Obligatorio (RN-05)
+              {t('customerStep')}
             </Typography>
             <Autocomplete
               options={clientes}
@@ -227,24 +227,24 @@ export const POSSalePage = () => {
               value={clienteSeleccionado}
               onChange={(event, newValue) => setClienteSeleccionado(newValue)}
               renderInput={(params) => (
-                <TextField {...params} label="Buscar Cliente por Cédula / NIT o Nombre" size="small" fullWidth />
+                <TextField {...params} label={t('customerSearchPlaceholder')} size="small" fullWidth />
               )}
             />
           </Paper>
 
           <Paper sx={{ p: 3, mb: 3 }} elevation={2}>
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              2. Búsqueda y Adición de Artículos
+              {t('itemSearchStep')}
             </Typography>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} sm={7}>
                 <Autocomplete
                   options={referencias}
-                  getOptionLabel={(option) => `[${option.codigoBarras}] ${option.productoNombre} (${option.marcaNombre}) — Stock: ${formatQuantity(option.stockDisponible)}`}
+                  getOptionLabel={(option) => `[${option.codigoBarras}] ${option.productoNombre} (${option.marcaNombre}) — ${t('colStock')}: ${formatQuantity(option.stockDisponible)}`}
                   value={referenciaSeleccionada}
                   onChange={(event, newValue) => setReferenciaSeleccionada(newValue)}
                   renderInput={(params) => (
-                    <TextField {...params} label="Escanear Código de Barras o Escribir Producto" size="small" fullWidth />
+                    <TextField {...params} label={t('itemSearchPlaceholder')} size="small" fullWidth />
                   )}
                 />
               </Grid>
@@ -252,7 +252,7 @@ export const POSSalePage = () => {
                 <TextField
                   fullWidth
                   size="small"
-                  label="Cantidad"
+                  label={t('quantity')}
                   type="number"
                   value={cantidadInput}
                   onChange={(e) => setCantidadInput(e.target.value)}
@@ -267,7 +267,7 @@ export const POSSalePage = () => {
                   onClick={handleAgregarLinea}
                   disabled={!referenciaSeleccionada}
                 >
-                  Agregar
+                  {t('add')}
                 </Button>
               </Grid>
             </Grid>
@@ -277,19 +277,19 @@ export const POSSalePage = () => {
             <Table size="small">
               <TableHead sx={{ bgcolor: 'action.hover' }}>
                 <TableRow>
-                  <TableCell><strong>Cód.</strong></TableCell>
-                  <TableCell><strong>Descripción</strong></TableCell>
-                  <TableCell align="center"><strong>Cant.</strong></TableCell>
-                  <TableCell align="right"><strong>Precio Unit.</strong></TableCell>
-                  <TableCell align="right"><strong>Subtotal (COP)</strong></TableCell>
-                  <TableCell align="center"><strong>Quitar</strong></TableCell>
+                  <TableCell><strong>{t('colItem')}</strong></TableCell>
+                  <TableCell><strong>{t('colDesc')}</strong></TableCell>
+                  <TableCell align="center"><strong>{t('colCant')}</strong></TableCell>
+                  <TableCell align="right"><strong>{t('colUnitPrice')}</strong></TableCell>
+                  <TableCell align="right"><strong>{t('colSubtotal')}</strong></TableCell>
+                  <TableCell align="center"><strong>{t('colRemove')}</strong></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {lineas.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                      El carrito está vacío. Agregue productos para iniciar la venta.
+                      {t('cartEmpty')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -321,20 +321,20 @@ export const POSSalePage = () => {
           <Card elevation={3} sx={{ borderRadius: 2 }}>
             <CardContent>
               <Typography variant="h6" fontWeight="bold" gutterBottom>
-                Liquidación de Mostrador
+                {t('settlementTitle')}
               </Typography>
               <Divider sx={{ my: 1.5 }} />
 
               <Stack spacing={2} sx={{ my: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body1" color="text.secondary">Total Artículos:</Typography>
+                  <Typography variant="body1" color="text.secondary">{t('totalArticles')}</Typography>
                   <Typography variant="body1" fontWeight="bold">
                     {lineas.reduce((sum, l) => sum + Number(l.cantidad), 0)}
                   </Typography>
                 </Box>
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <Typography variant="h6">Total a Pagar:</Typography>
+                  <Typography variant="h6">{t('totalToPay')}</Typography>
                   <Typography variant="h4" fontWeight="bold" color="primary.main">
                     {formatCurrency(totalVenta)}
                   </Typography>
@@ -343,12 +343,12 @@ export const POSSalePage = () => {
                 <Divider />
 
                 <Typography variant="subtitle2" fontWeight="bold">
-                  Medio de Pago: Efectivo (RN-06)
+                  {t('cashPaymentMethod')}
                 </Typography>
 
                 <TextField
                   fullWidth
-                  label="Efectivo Recibido (COP)"
+                  label={t('cashReceived')}
                   type="number"
                   value={montoEfectivo}
                   onChange={(e) => setMontoEfectivo(e.target.value)}
@@ -363,7 +363,7 @@ export const POSSalePage = () => {
 
                 <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2, textAlign: 'center' }}>
                   <Typography variant="caption" color="text.secondary" display="block">
-                    Cambio / Vueltas a Devolver:
+                    {t('changeToReturn')}
                   </Typography>
                   <Typography variant="h5" fontWeight="bold" color={cambio > 0 ? 'success.main' : 'text.primary'}>
                     {formatCurrency(cambio)}
@@ -379,7 +379,7 @@ export const POSSalePage = () => {
                   onClick={handleConfirmarVenta}
                   sx={{ py: 1.5, fontWeight: 'bold', fontSize: '1.05rem' }}
                 >
-                  {loading ? <CircularProgress size={26} color="inherit" /> : 'Confirmar y Despachar'}
+                  {loading ? <CircularProgress size={26} color="inherit" /> : t('confirmAndDispatch')}
                 </Button>
               </Stack>
             </CardContent>

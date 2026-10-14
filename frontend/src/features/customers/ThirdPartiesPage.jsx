@@ -35,8 +35,10 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import apiClient from '../../services/api/apiClient';
+import { useLanguage } from '../../app/providers/LanguageProvider';
 
 export const ThirdPartiesPage = () => {
+  const { t } = useLanguage();
   const [terceros, setTerceros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -81,9 +83,16 @@ export const ThirdPartiesPage = () => {
     },
     validationSchema: Yup.object({
       tipoDocumento: Yup.string().required('Obligatorio'),
-      numeroDocumento: Yup.string().required('Número de documento obligatorio'),
+      numeroDocumento: Yup.string()
+        .matches(/^[0-9]+(-[0-9kK])?$/, 'El número de documento debe contener solo dígitos (o guión para NIT ej: 900123456-1)')
+        .min(4, 'Mínimo 4 caracteres')
+        .max(30, 'Máximo 30 caracteres')
+        .required('Número de documento obligatorio'),
       razonSocial: Yup.string().required('Nombre o Razón Social obligatorio'),
       tipoPersona: Yup.string().required('Obligatorio'),
+      telefono: Yup.string()
+        .matches(/^[0-9+\s-]*$/, 'El teléfono debe contener únicamente números')
+        .nullable(),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
@@ -139,11 +148,11 @@ export const ThirdPartiesPage = () => {
             Administración de Terceros (Clientes y Proveedores)
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Gestión unificada de personas naturales y jurídicas bajo identificación fiscal colombiana (CC / NIT) — RN-10
+            {t('tpSubtitle')}
           </Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
-          Nuevo Tercero
+          {t('newThirdParty')}
         </Button>
       </Box>
 
@@ -155,7 +164,7 @@ export const ThirdPartiesPage = () => {
           <TextField
             fullWidth
             size="small"
-            placeholder="Buscar por número de cédula, NIT o razón social..."
+            placeholder={t('customerSearchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             InputProps={{
@@ -167,9 +176,9 @@ export const ThirdPartiesPage = () => {
             onChange={(e, val) => setFiltroTipo(val)}
             sx={{ minWidth: 320 }}
           >
-            <Tab label="Todos" value="TODOS" />
-            <Tab label="Solo Clientes" value="CLIENTE" />
-            <Tab label="Solo Proveedores" value="PROVEEDOR" />
+            <Tab label={t('tabAll')} value="TODOS" />
+            <Tab label={t('tabClients')} value="CLIENTE" />
+            <Tab label={t('tabSuppliers')} value="PROVEEDOR" />
           </Tabs>
         </Stack>
       </Paper>
@@ -183,12 +192,12 @@ export const ThirdPartiesPage = () => {
           <Table>
             <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
-                <TableCell><strong>Identificación</strong></TableCell>
-                <TableCell><strong>Nombre / Razón Social</strong></TableCell>
-                <TableCell><strong>Tipo Persona</strong></TableCell>
-                <TableCell><strong>Contacto</strong></TableCell>
-                <TableCell align="center"><strong>Roles Comerciales</strong></TableCell>
-                <TableCell align="center"><strong>Acciones</strong></TableCell>
+                <TableCell><strong>{t('colId')}</strong></TableCell>
+                <TableCell><strong>{t('colBusinessName')}</strong></TableCell>
+                <TableCell><strong>{t('colPersonType')}</strong></TableCell>
+                <TableCell><strong>{t('colContact')}</strong></TableCell>
+                <TableCell align="center"><strong>{t('colRoles')}</strong></TableCell>
+                <TableCell align="center"><strong>{t('colActions')}</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -257,9 +266,12 @@ export const ThirdPartiesPage = () => {
                   fullWidth
                   id="numeroDocumento"
                   name="numeroDocumento"
-                  label="Número de Documento"
+                  label="Número de Documento (Solo dígitos)"
                   value={formik.values.numeroDocumento}
-                  onChange={formik.handleChange}
+                  onChange={(e) => {
+                    const clean = e.target.value.replace(/[^0-9-]/g, '');
+                    formik.setFieldValue('numeroDocumento', clean);
+                  }}
                   error={formik.touched.numeroDocumento && Boolean(formik.errors.numeroDocumento)}
                   helperText={formik.touched.numeroDocumento && formik.errors.numeroDocumento}
                 />
@@ -295,9 +307,14 @@ export const ThirdPartiesPage = () => {
                   fullWidth
                   id="telefono"
                   name="telefono"
-                  label="Teléfono / Celular"
+                  label="Teléfono / Celular (Solo dígitos)"
                   value={formik.values.telefono}
-                  onChange={formik.handleChange}
+                  onChange={(e) => {
+                    const clean = e.target.value.replace(/[^0-9+\s-]/g, '');
+                    formik.setFieldValue('telefono', clean);
+                  }}
+                  error={formik.touched.telefono && Boolean(formik.errors.telefono)}
+                  helperText={formik.touched.telefono && formik.errors.telefono}
                 />
                 <TextField
                   fullWidth

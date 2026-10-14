@@ -87,19 +87,66 @@ public class CatalogService {
             throw new BusinessException("Ya existe una referencia con el código de barras: " + request.getCodigoBarras());
         }
 
-        if (referenciaRepository.existsByProductoIdAndMarcaIdAndPresentacionId(
-                request.getProductoId(), request.getMarcaId(), request.getPresentacionId())) {
-            throw new BusinessException("Ya existe una referencia con la misma combinación de Producto, Marca y Presentación");
+        // Resolver Producto
+        Producto producto;
+        if (request.getProductoId() != null) {
+            producto = productoRepository.findById(request.getProductoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + request.getProductoId()));
+        } else if (request.getProductoNombre() != null && !request.getProductoNombre().trim().isEmpty()) {
+            String pNombre = request.getProductoNombre().trim();
+            producto = productoRepository.findByNombre(pNombre)
+                    .orElseGet(() -> productoRepository.save(new Producto(null, pNombre, pNombre, true)));
+        } else {
+            throw new BusinessException("Debe seleccionar o ingresar el nombre del producto");
         }
 
-        Producto producto = productoRepository.findById(request.getProductoId())
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + request.getProductoId()));
-        Marca marca = marcaRepository.findById(request.getMarcaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Marca no encontrada con ID: " + request.getMarcaId()));
-        Presentacion presentacion = presentacionRepository.findById(request.getPresentacionId())
-                .orElseThrow(() -> new ResourceNotFoundException("Presentación no encontrada con ID: " + request.getPresentacionId()));
-        UnidadMedida unidad = unidadMedidaRepository.findById(request.getUnidadMedidaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Unidad de medida no encontrada con ID: " + request.getUnidadMedidaId()));
+        // Resolver Marca
+        Marca marca;
+        if (request.getMarcaId() != null) {
+            marca = marcaRepository.findById(request.getMarcaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Marca no encontrada con ID: " + request.getMarcaId()));
+        } else if (request.getMarcaNombre() != null && !request.getMarcaNombre().trim().isEmpty()) {
+            String mNombre = request.getMarcaNombre().trim();
+            marca = marcaRepository.findByNombre(mNombre)
+                    .orElseGet(() -> marcaRepository.save(new Marca(null, mNombre, true)));
+        } else {
+            marca = marcaRepository.findByNombre("Generico")
+                    .orElseGet(() -> marcaRepository.save(new Marca(null, "Generico", true)));
+        }
+
+        // Resolver Presentación
+        Presentacion presentacion;
+        if (request.getPresentacionId() != null) {
+            presentacion = presentacionRepository.findById(request.getPresentacionId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Presentación no encontrada con ID: " + request.getPresentacionId()));
+        } else if (request.getPresentacionNombre() != null && !request.getPresentacionNombre().trim().isEmpty()) {
+            String presNombre = request.getPresentacionNombre().trim();
+            presentacion = presentacionRepository.findByNombre(presNombre)
+                    .orElseGet(() -> presentacionRepository.save(new Presentacion(null, presNombre, true)));
+        } else {
+            presentacion = presentacionRepository.findByNombre("Unidad Suelta")
+                    .orElseGet(() -> presentacionRepository.save(new Presentacion(null, "Unidad Suelta", true)));
+        }
+
+        // Resolver Unidad de Medida
+        UnidadMedida unidad;
+        if (request.getUnidadMedidaId() != null) {
+            unidad = unidadMedidaRepository.findById(request.getUnidadMedidaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Unidad de medida no encontrada con ID: " + request.getUnidadMedidaId()));
+        } else if (request.getUnidadMedidaCodigo() != null && !request.getUnidadMedidaCodigo().trim().isEmpty()) {
+            String uCode = request.getUnidadMedidaCodigo().trim().toUpperCase();
+            unidad = unidadMedidaRepository.findByCodigo(uCode)
+                    .orElseGet(() -> unidadMedidaRepository.save(new UnidadMedida(null, uCode, uCode)));
+        } else {
+            unidad = unidadMedidaRepository.findByCodigo("UND")
+                    .orElseGet(() -> unidadMedidaRepository.save(new UnidadMedida(null, "UND", "Unidad")));
+        }
+
+        if (referenciaRepository.existsByProductoIdAndMarcaIdAndPresentacionId(
+                producto.getId(), marca.getId(), presentacion.getId())) {
+            throw new BusinessException("Ya existe una referencia registrada con la combinación de Producto: '" +
+                    producto.getNombre() + "', Marca: '" + marca.getNombre() + "' y Presentación: '" + presentacion.getNombre() + "'");
+        }
 
         Referencia ref = new Referencia();
         ref.setProducto(producto);
@@ -121,6 +168,32 @@ public class CatalogService {
                 "Creación de referencia " + guardada.getCodigoBarras() + " - " + guardada.getNombreCompleto());
 
         return mapToResponse(guardada);
+    }
+
+    @Transactional
+    public ReferenciaResponse alternarEstado(Long id, String username) {
+        Referencia ref = referenciaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Referencia no encontrada con ID: " + id));
+
+        boolean nuevoEstado = !ref.isActivo();
+        ref.setActivo(nuevoEstado);
+        referenciaRepository.save(ref);
+
+        Usuario usuario = usuarioRepository.findByUsername(username).orElse(null);
+        auditService.registrarEvento(usuario, "CATALOGO", nuevoEstado ? "ACTIVAR_REFERENCIA" : "DESACTIVAR_REFERENCIA",
+                (nuevoEstado ? "Activación" : "Desactivación") + " de referencia " + ref.getCodigoBarras());
+
+        return mapToResponse(ref);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> obtenerMaestros() {
+        return java.util.Map.of(
+                "productos", productoRepository.findAll(),
+                "marcas", marcaRepository.findAll(),
+                "presentaciones", presentacionRepository.findAll(),
+                "unidadesMedida", unidadMedidaRepository.findAll()
+        );
     }
 
     @Transactional

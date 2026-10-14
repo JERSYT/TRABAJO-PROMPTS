@@ -43,6 +43,11 @@ public class CatalogController {
         return ResponseEntity.ok(catalogService.obtenerPorCodigoBarras(barcode));
     }
 
+    @GetMapping("/masters")
+    public ResponseEntity<java.util.Map<String, Object>> obtenerMaestros() {
+        return ResponseEntity.ok(catalogService.obtenerMaestros());
+    }
+
     @PostMapping("/references")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<ReferenciaResponse> crearReferencia(
@@ -51,6 +56,15 @@ public class CatalogController {
         String username = userDetails != null ? userDetails.getUsername() : "SISTEMA";
         ReferenciaResponse creada = catalogService.crearReferencia(request, username);
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
+    }
+
+    @PatchMapping("/references/{id}/toggle-status")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<ReferenciaResponse> alternarEstado(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails != null ? userDetails.getUsername() : "SISTEMA";
+        return ResponseEntity.ok(catalogService.alternarEstado(id, username));
     }
 
     @PatchMapping("/references/{id}/price")

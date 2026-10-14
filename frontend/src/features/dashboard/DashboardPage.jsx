@@ -18,11 +18,13 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import PeopleIcon from '@mui/icons-material/People';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../app/providers/AuthProvider';
+import { useLanguage } from '../../app/providers/LanguageProvider';
 import apiClient from '../../services/api/apiClient';
 import { formatCurrency, formatQuantity } from '../../utils/formatters';
 
 export const DashboardPage = () => {
   const { user, hasRole } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const isAdmin = hasRole('ROLE_ADMINISTRADOR');
 
@@ -67,10 +69,10 @@ export const DashboardPage = () => {
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           <Typography variant="h4" component="h1" fontWeight="bold">
-            Panel de Control
+            {t('dashboardTitle')}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Bienvenido, {user?.nombreCompleto} ({isAdmin ? 'Administrador' : 'Usuario Operativo'})
+            {t('welcomeUser')}, {user?.nombreCompleto} ({isAdmin ? t('admin') : t('operative')})
           </Typography>
         </Box>
         <Button
@@ -81,7 +83,7 @@ export const DashboardPage = () => {
           onClick={() => navigate('/ventas/nueva')}
           sx={{ py: 1.2, px: 3, fontWeight: 'bold' }}
         >
-          Nueva Venta de Mostrador
+          {t('newSaleBtn')}
         </Button>
       </Box>
 
@@ -92,11 +94,11 @@ export const DashboardPage = () => {
           sx={{ mb: 3 }}
           action={
             <Button color="inherit" size="small" onClick={() => navigate('/inventario?bajoStock=true')}>
-              Ver Artículos
+              {t('viewItems')}
             </Button>
           }
         >
-          Hay <strong>{stats.articulosBajoStock} artículos</strong> con existencias bajas (5 unidades o menos).
+          Hay <strong>{stats.articulosBajoStock} {t('lowStockWarning')}</strong>
         </Alert>
       )}
 
@@ -114,7 +116,7 @@ export const DashboardPage = () => {
                 </Box>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
-                    Referencias en Catálogo
+                    {t('kpiCatalog')}
                   </Typography>
                   <Typography variant="h5" fontWeight="bold">
                     {stats.totalReferencias}
@@ -132,7 +134,7 @@ export const DashboardPage = () => {
                 </Box>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
-                    Total Unidades en Stock
+                    {t('kpiStock')}
                   </Typography>
                   <Typography variant="h5" fontWeight="bold">
                     {formatQuantity(stats.totalExistencias)}
@@ -150,7 +152,7 @@ export const DashboardPage = () => {
                 </Box>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
-                    Artículos en Nivel Crítico
+                    {t('kpiCritical')}
                   </Typography>
                   <Typography variant="h5" fontWeight="bold" color="error.main">
                     {stats.articulosBajoStock}
@@ -163,7 +165,7 @@ export const DashboardPage = () => {
       )}
 
       <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-        Accesos Rápidos de Operación
+        {t('quickActions')}
       </Typography>
 
       <Grid container spacing={2}>
@@ -176,8 +178,8 @@ export const DashboardPage = () => {
             <Stack direction="row" spacing={2} alignItems="center">
               <PointOfSaleIcon color="primary" fontSize="large" />
               <Box>
-                <Typography variant="subtitle1" fontWeight="bold">Facturación</Typography>
-                <Typography variant="caption" color="text.secondary">Cobro en efectivo y despacho</Typography>
+                <Typography variant="subtitle1" fontWeight="bold">{t('billing')}</Typography>
+                <Typography variant="caption" color="text.secondary">{t('billingDesc')}</Typography>
               </Box>
             </Stack>
           </Card>
@@ -192,8 +194,8 @@ export const DashboardPage = () => {
             <Stack direction="row" spacing={2} alignItems="center">
               <ShoppingBagIcon color="primary" fontSize="large" />
               <Box>
-                <Typography variant="subtitle1" fontWeight="bold">Nueva Compra</Typography>
-                <Typography variant="caption" color="text.secondary">Recepción y Costo Promedio</Typography>
+                <Typography variant="subtitle1" fontWeight="bold">{t('newPurchase')}</Typography>
+                <Typography variant="caption" color="text.secondary">{t('newPurchaseDesc')}</Typography>
               </Box>
             </Stack>
           </Card>
@@ -208,8 +210,8 @@ export const DashboardPage = () => {
             <Stack direction="row" spacing={2} alignItems="center">
               <Inventory2Icon color="primary" fontSize="large" />
               <Box>
-                <Typography variant="subtitle1" fontWeight="bold">Inventario / Kárdex</Typography>
-                <Typography variant="caption" color="text.secondary">Saldos y movimientos</Typography>
+                <Typography variant="subtitle1" fontWeight="bold">{t('inventoryKardex')}</Typography>
+                <Typography variant="caption" color="text.secondary">{t('inventoryKardexDesc')}</Typography>
               </Box>
             </Stack>
           </Card>
@@ -224,8 +226,8 @@ export const DashboardPage = () => {
             <Stack direction="row" spacing={2} alignItems="center">
               <PeopleIcon color="primary" fontSize="large" />
               <Box>
-                <Typography variant="subtitle1" fontWeight="bold">Terceros</Typography>
-                <Typography variant="caption" color="text.secondary">Clientes y Proveedores</Typography>
+                <Typography variant="subtitle1" fontWeight="bold">{t('thirdParties')}</Typography>
+                <Typography variant="caption" color="text.secondary">{t('thirdPartiesDesc')}</Typography>
               </Box>
             </Stack>
           </Card>

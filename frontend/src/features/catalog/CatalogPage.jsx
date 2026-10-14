@@ -21,19 +21,27 @@ import {
   Alert,
   Stack,
   Tooltip,
+  Autocomplete,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import SearchIcon from '@mui/icons-material/Search';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import apiClient from '../../services/api/apiClient';
 import { formatCurrency, formatQuantity } from '../../utils/formatters';
 import { useAuth } from '../../app/providers/AuthProvider';
+import { useLanguage } from '../../app/providers/LanguageProvider';
 
 export const CatalogPage = () => {
   const { hasRole } = useAuth();
+  const { t } = useLanguage();
   const isAdmin = hasRole('ROLE_ADMINISTRADOR');
 
   const [referencias, setReferencias] = useState([]);
@@ -41,6 +49,14 @@ export const CatalogPage = () => {
   const [search, setSearch] = useState('');
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+
+  // Maestros para creación de referencias
+  const [maestros, setMaestros] = useState({
+    productos: [],
+    marcas: [],
+    presentaciones: [],
+    unidadesMedida: [],
+  });
 
   // Modales
   const [openPriceModal, setOpenPriceModal] = useState(false);
@@ -57,15 +73,33 @@ export const CatalogPage = () => {
       const response = await apiClient.get(`/catalog/references?${params.toString()}`);
       setReferencias(response.data.content || []);
     } catch (err) {
-      setError('Error al cargar referencias del catálogo');
+      setError(t('noItemsFound'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMasters = async () => {
+    try {
+      const response = await apiClient.get('/catalog/masters');
+      setMaestros({
+        productos: response.data.productos || [],
+        marcas: response.data.marcas || [],
+        presentaciones: response.data.presentaciones || [],
+        unidadesMedida: response.data.unidadesMedida || [],
+      });
+    } catch (err) {
+      // Si falla maestros no bloquea catálogo
     }
   };
 
   useEffect(() => {
     fetchCatalog();
   }, [search]);
+
+  useEffect(() => {
+    fetchMasters();
+  }, []);
 
   // Formik para cambio de precio con auditoría (RN-09, RN-11)
   const priceFormik = useFormik({
@@ -95,27 +129,32 @@ export const CatalogPage = () => {
     },
   });
 
-  // Formik para creación de nueva referencia
+  // Formik para creación de nueva referencia con Producto + Marca + Presentación seleccionables o libres
   const createFormik = useFormik({
     initialValues: {
       codigoBarras: '',
-      productoId: 1,
-      marcaId: 1,
-      presentacionId: 1,
-      unidadMedidaId: 1,
+      productoNombre: '',
+      marcaNombre: '',
+      presentacionNombre: '',
+      unidadMedidaCodigo: 'UND',
       precioVenta: '',
     },
     validationSchema: Yup.object({
       codigoBarras: Yup.string().required('Código de barras obligatorio'),
+      productoNombre: Yup.string().required('Debe ingresar o seleccionar el producto base'),
+      marcaNombre: Yup.string().required('Debe ingresar o seleccionar la marca'),
+      presentacionNombre: Yup.string().required('Debe ingresar o seleccionar la presentación'),
+      unidadMedidaCodigo: Yup.string().required('Unidad de medida obligatoria'),
       precioVenta: Yup.number().positive('Precio debe ser positivo').required('Precio obligatorio'),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
         await apiClient.post('/catalog/references', values);
-        setSuccessMsg('Referencia creada en el catálogo exitosamente.');
+        setSuccessMsg(`Referencia ${values.codigoBarras} creada en el catálogo exitosamente.`);
         setOpenCreateModal(false);
         resetForm();
         fetchCatalog();
+        fetchMasters();
       } catch (err) {
         setError(err.response?.data?.detail || 'Error al crear la referencia en el catálogo');
       }
@@ -131,14 +170,16 @@ export const CatalogPage = () => {
     setOpenPriceModal(true);
   };
 
-  const handleDeactivate = async (ref) => {
-    if (window.confirm(`¿Está seguro de desactivar la referencia ${ref.codigoBarras}? Si tiene historial no se borrará físicamente (RN-02).`)) {
+  // Activar o desactivar producto (soluciona error de reactivación)
+  const handleToggleStatus = async (ref) => {
+    const accion = ref.activo ? 'desactivar' : 'activar';
+    if (window.confirm(`¿Está seguro de ${accion} la referencia ${ref.codigoBarras}?`)) {
       try {
-        await apiClient.delete(`/catalog/references/${ref.id}`);
-        setSuccessMsg(`Referencia ${ref.codigoBarras} desactivada correctamente.`);
+        await apiClient.patch(`/catalog/references/${ref.id}/toggle-status`);
+        setSuccessMsg(`Estado de referencia ${ref.codigoBarras} modificado a ${ref.activo ? 'INACTIVO' : 'ACTIVO'}.`);
         fetchCatalog();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Error al desactivar referencia');
+        setError(err.response?.data?.detail || 'Error al cambiar estado de la referencia');
       }
     }
   };
@@ -148,19 +189,22 @@ export const CatalogPage = () => {
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           <Typography variant="h5" fontWeight="bold">
-            Catálogo de Artículos y Referencias
+            {t('catalogTitle')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Administración de referencias comerciales (Producto + Marca + Presentación), códigos de barra y precios en COP
+            {t('catalogSubtitle')}
           </Typography>
         </Box>
         {isAdmin && (
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => setOpenCreateModal(true)}
+            onClick={() => {
+              createFormik.resetForm();
+              setOpenCreateModal(true);
+            }}
           >
-            Nueva Referencia
+            {t('newReference')}
           </Button>
         )}
       </Box>
@@ -181,7 +225,7 @@ export const CatalogPage = () => {
         <TextField
           fullWidth
           size="small"
-          placeholder="Buscar por código de barras o nombre del artículo..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -199,21 +243,21 @@ export const CatalogPage = () => {
           <Table>
             <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
-                <TableCell><strong>Cód. Barras</strong></TableCell>
-                <TableCell><strong>Descripción Comercial</strong></TableCell>
-                <TableCell><strong>Unidad</strong></TableCell>
-                <TableCell align="right"><strong>Precio Venta (COP)</strong></TableCell>
-                {isAdmin && <TableCell align="right"><strong>Costo Promedio (CPP)</strong></TableCell>}
-                <TableCell align="center"><strong>Stock</strong></TableCell>
-                <TableCell align="center"><strong>Estado</strong></TableCell>
-                <TableCell align="center"><strong>Acciones</strong></TableCell>
+                <TableCell><strong>{t('colBarcode')}</strong></TableCell>
+                <TableCell><strong>{t('colDescription')}</strong></TableCell>
+                <TableCell><strong>{t('colUnit')}</strong></TableCell>
+                <TableCell align="right"><strong>{t('colSalePrice')}</strong></TableCell>
+                {isAdmin && <TableCell align="right"><strong>{t('colAvgCost')}</strong></TableCell>}
+                <TableCell align="center"><strong>{t('colStock')}</strong></TableCell>
+                <TableCell align="center"><strong>{t('colStatus')}</strong></TableCell>
+                <TableCell align="center"><strong>{t('colActions')}</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {referencias.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
-                    No se encontraron artículos en el catálogo.
+                    {t('noItemsFound')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -248,14 +292,14 @@ export const CatalogPage = () => {
                     </TableCell>
                     <TableCell align="center">
                       <Chip
-                        label={ref.activo ? 'ACTIVO' : 'INACTIVO'}
+                        label={ref.activo ? t('active') : t('inactive')}
                         color={ref.activo ? 'success' : 'default'}
                         size="small"
                       />
                     </TableCell>
                     <TableCell align="center">
                       <Stack direction="row" spacing={1} justifyContent="center">
-                        <Tooltip title="Modificar Precio (Auditado)">
+                        <Tooltip title={t('modifyPrice')}>
                           <IconButton
                             size="small"
                             color="primary"
@@ -264,14 +308,14 @@ export const CatalogPage = () => {
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        {isAdmin && ref.activo && (
-                          <Tooltip title="Desactivar Referencia">
+                        {isAdmin && (
+                          <Tooltip title={ref.activo ? t('deactivateRef') : t('activateRef')}>
                             <IconButton
                               size="small"
-                              color="error"
-                              onClick={() => handleDeactivate(ref)}
+                              color={ref.activo ? 'error' : 'success'}
+                              onClick={() => handleToggleStatus(ref)}
                             >
-                              <BlockIcon fontSize="small" />
+                              {ref.activo ? <BlockIcon fontSize="small" /> : <CheckCircleOutlineIcon fontSize="small" />}
                             </IconButton>
                           </Tooltip>
                         )}
@@ -287,7 +331,7 @@ export const CatalogPage = () => {
 
       {/* Modal Modificar Precio */}
       <Dialog open={openPriceModal} onClose={() => setOpenPriceModal(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Modificar Precio de Venta</DialogTitle>
+        <DialogTitle>{t('modifyPrice')}</DialogTitle>
         <form onSubmit={priceFormik.handleSubmit}>
           <DialogContent>
             <Typography variant="body2" sx={{ mb: 2 }}>
@@ -297,7 +341,7 @@ export const CatalogPage = () => {
               fullWidth
               id="nuevoPrecio"
               name="nuevoPrecio"
-              label="Nuevo Precio de Venta (COP)"
+              label={t('priceLabel')}
               type="number"
               margin="normal"
               value={priceFormik.values.nuevoPrecio}
@@ -320,33 +364,107 @@ export const CatalogPage = () => {
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpenPriceModal(false)}>Cancelar</Button>
-            <Button type="submit" variant="contained">Guardar Precio</Button>
+            <Button onClick={() => setOpenPriceModal(false)}>{t('cancel')}</Button>
+            <Button type="submit" variant="contained">{t('savePrice')}</Button>
           </DialogActions>
         </form>
       </Dialog>
 
-      {/* Modal Crear Referencia */}
+      {/* Modal Crear Referencia Completa (Corrige error de campos faltantes) */}
       <Dialog open={openCreateModal} onClose={() => setOpenCreateModal(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Registrar Nueva Referencia en Catálogo</DialogTitle>
+        <DialogTitle>{t('createRefTitle')}</DialogTitle>
         <form onSubmit={createFormik.handleSubmit}>
           <DialogContent>
-            <Stack spacing={2} sx={{ mt: 1 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+              Una referencia comercial única se define combinando Producto + Marca + Presentación + Código de Barras (RN-02). Puede seleccionar existentes o escribir nuevos nombres.
+            </Typography>
+
+            <Stack spacing={2}>
+              {/* Producto */}
+              <Autocomplete
+                freeSolo
+                options={maestros.productos.map((p) => p.nombre)}
+                value={createFormik.values.productoNombre}
+                onChange={(event, newValue) => createFormik.setFieldValue('productoNombre', newValue || '')}
+                onInputChange={(event, newInputValue) => createFormik.setFieldValue('productoNombre', newInputValue || '')}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={`${t('productLabel')} (Ej: Martillo de Uña, Disco de Corte)`}
+                    error={createFormik.touched.productoNombre && Boolean(createFormik.errors.productoNombre)}
+                    helperText={createFormik.touched.productoNombre && createFormik.errors.productoNombre}
+                  />
+                )}
+              />
+
+              {/* Marca */}
+              <Autocomplete
+                freeSolo
+                options={maestros.marcas.map((m) => m.nombre)}
+                value={createFormik.values.marcaNombre}
+                onChange={(event, newValue) => createFormik.setFieldValue('marcaNombre', newValue || '')}
+                onInputChange={(event, newInputValue) => createFormik.setFieldValue('marcaNombre', newInputValue || '')}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={`${t('brandLabel')} (Ej: Stanley, Herragro, Bellota, Generico)`}
+                    error={createFormik.touched.marcaNombre && Boolean(createFormik.errors.marcaNombre)}
+                    helperText={createFormik.touched.marcaNombre && createFormik.errors.marcaNombre}
+                  />
+                )}
+              />
+
+              {/* Presentación */}
+              <Autocomplete
+                freeSolo
+                options={maestros.presentaciones.map((pr) => pr.nombre)}
+                value={createFormik.values.presentacionNombre}
+                onChange={(event, newValue) => createFormik.setFieldValue('presentacionNombre', newValue || '')}
+                onInputChange={(event, newInputValue) => createFormik.setFieldValue('presentacionNombre', newInputValue || '')}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={`${t('presentationLabel')} (Ej: Unidad Suelta, Caja x 100, Galón)`}
+                    error={createFormik.touched.presentacionNombre && Boolean(createFormik.errors.presentacionNombre)}
+                    helperText={createFormik.touched.presentacionNombre && createFormik.errors.presentacionNombre}
+                  />
+                )}
+              />
+
+              {/* Unidad de Medida */}
+              <FormControl fullWidth>
+                <InputLabel>{t('unitLabel')}</InputLabel>
+                <Select
+                  value={createFormik.values.unidadMedidaCodigo}
+                  label={t('unitLabel')}
+                  onChange={(e) => createFormik.setFieldValue('unidadMedidaCodigo', e.target.value)}
+                >
+                  <MenuItem value="UND">UND — Unidad</MenuItem>
+                  <MenuItem value="MTR">MTR — Metro lineal</MenuItem>
+                  <MenuItem value="KGM">KGM — Kilogramo</MenuItem>
+                  <MenuItem value="GLN">GLN — Galón</MenuItem>
+                  <MenuItem value="CJA">CJA — Caja</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Código de Barras */}
               <TextField
                 fullWidth
                 id="codigoBarras"
                 name="codigoBarras"
-                label="Código de Barras Único (EAN-13 o Interno)"
+                label={t('barcodeLabel')}
                 value={createFormik.values.codigoBarras}
                 onChange={createFormik.handleChange}
                 error={createFormik.touched.codigoBarras && Boolean(createFormik.errors.codigoBarras)}
                 helperText={createFormik.touched.codigoBarras && createFormik.errors.codigoBarras}
               />
+
+              {/* Precio de Venta */}
               <TextField
                 fullWidth
                 id="precioVenta"
                 name="precioVenta"
-                label="Precio de Venta al Público (COP)"
+                label={t('priceLabel')}
                 type="number"
                 value={createFormik.values.precioVenta}
                 onChange={createFormik.handleChange}
@@ -356,8 +474,8 @@ export const CatalogPage = () => {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpenCreateModal(false)}>Cancelar</Button>
-            <Button type="submit" variant="contained">Crear Referencia</Button>
+            <Button onClick={() => setOpenCreateModal(false)}>{t('cancel')}</Button>
+            <Button type="submit" variant="contained">{t('create')}</Button>
           </DialogActions>
         </form>
       </Dialog>

@@ -13,6 +13,7 @@ public class CrearTerceroRequest {
 
     @NotBlank(message = "El número de documento es obligatorio")
     @Size(min = 4, max = 30, message = "El número de documento debe tener entre 4 y 30 caracteres")
+    @Pattern(regexp = "^[0-9]+(-[0-9kK])?$", message = "El número de documento debe contener únicamente dígitos numéricos (o guión para dígito de verificación en NIT)")
     private String numeroDocumento;
 
     @NotBlank(message = "La razón social o nombre completo es obligatoria")
@@ -23,6 +24,7 @@ public class CrearTerceroRequest {
     @Pattern(regexp = "^(NATURAL|JURIDICA)$", message = "Tipo de persona inválido (NATURAL o JURIDICA)")
     private String tipoPersona;
 
+    @Pattern(regexp = "^$|^[0-9+\\s-]{7,25}$", message = "El teléfono debe contener únicamente dígitos numéricos (mínimo 7)")
     private String telefono;
     private String email;
     private String direccion;
