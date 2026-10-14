@@ -1,0 +1,205 @@
+erDiagram
+    USUARIO ||--o{ AUDITORIA_LOG : "genera"
+    ROL ||--o{ USUARIO_ROL : "contiene"
+    USUARIO ||--o{ USUARIO_ROL : "posee"
+
+    TERCERO ||--o{ COMPRA : "provee"
+    TERCERO ||--o{ VENTA : "compra"
+
+    MARCA ||--o{ REFERENCIA : "clasifica"
+    PRODUCTO ||--o{ REFERENCIA : "define"
+    PRESENTACION ||--o{ REFERENCIA : "empaqueta"
+    UNIDAD_MEDIDA ||--o{ REFERENCIA : "mide"
+
+    REFERENCIA ||--|| INVENTARIO_SALDO : "mantiene_saldo"
+    REFERENCIA ||--o{ INVENTARIO_MOVIMIENTO : "registra_movimiento"
+    REFERENCIA ||--o{ COMPRA_LINEA : "incluye"
+    REFERENCIA ||--o{ VENTA_LINEA : "incluye"
+    REFERENCIA ||--o{ DEVOLUCION_LINEA : "incluye"
+    REFERENCIA ||--o{ AJUSTE_INVENTARIO : "ajusta"
+
+    COMPRA ||--|{ COMPRA_LINEA : "detalla"
+    VENTA ||--|{ VENTA_LINEA : "detalla"
+    DEVOLUCION ||--|{ DEVOLUCION_LINEA : "detalla"
+
+    VENTA ||--o{ DEVOLUCION : "origina_opcional"
+    COMPRA ||--o{ INVENTARIO_MOVIMIENTO : "genera_entrada"
+    VENTA ||--o{ INVENTARIO_MOVIMIENTO : "genera_salida"
+    DEVOLUCION ||--o{ INVENTARIO_MOVIMIENTO : "genera_reintegro"
+    AJUSTE_INVENTARIO ||--|| INVENTARIO_MOVIMIENTO : "produce"
+
+    USUARIO {
+        bigint id PK
+        varchar username UK
+        varchar password_hash
+        varchar nombre_completo
+        boolean activo
+        datetime fecha_creacion
+    }
+
+    ROL {
+        bigint id PK
+        varchar nombre UK
+    }
+
+    TERCERO {
+        bigint id PK
+        varchar tipo_documento
+        varchar numero_documento UK
+        varchar razon_social
+        varchar telefono
+        varchar email
+        varchar direccion
+        boolean es_cliente
+        boolean es_proveedor
+        boolean activo
+    }
+
+    PRODUCTO {
+        bigint id PK
+        varchar nombre
+        varchar descripcion
+        boolean activo
+    }
+
+    MARCA {
+        bigint id PK
+        varchar nombre UK
+        boolean activo
+    }
+
+    PRESENTACION {
+        bigint id PK
+        varchar nombre UK
+        boolean activo
+    }
+
+    UNIDAD_MEDIDA {
+        bigint id PK
+        varchar codigo UK
+        varchar nombre
+    }
+
+    REFERENCIA {
+        bigint id PK
+        bigint producto_id FK
+        bigint marca_id FK
+        bigint presentacion_id FK
+        bigint unidad_medida_id FK
+        varchar codigo_barras UK
+        decimal precio_venta
+        boolean activo
+    }
+
+    INVENTARIO_SALDO {
+        bigint id PK
+        bigint referencia_id FK,UK
+        decimal cantidad_disponible
+        decimal costo_promedio_ponderado
+        datetime fecha_actualizacion
+        bigint version
+    }
+
+    INVENTARIO_MOVIMIENTO {
+        bigint id PK
+        bigint referencia_id FK
+        varchar tipo_movimiento
+        decimal cantidad
+        decimal costo_unitario_movimiento
+        decimal saldo_resultante
+        varchar documento_tipo
+        bigint documento_id
+        varchar motivo
+        datetime fecha_hora
+        bigint usuario_id FK
+    }
+
+    COMPRA {
+        bigint id PK
+        varchar consecutivo UK
+        bigint proveedor_id FK
+        datetime fecha_hora
+        decimal total
+        varchar estado
+        varchar motivo_cancelacion
+        bigint usuario_id FK
+    }
+
+    COMPRA_LINEA {
+        bigint id PK
+        bigint compra_id FK
+        bigint referencia_id FK
+        decimal cantidad
+        decimal costo_unitario
+        decimal subtotal
+    }
+
+    VENTA {
+        bigint id PK
+        varchar consecutivo UK
+        bigint cliente_id FK
+        datetime fecha_hora
+        decimal subtotal
+        decimal total
+        decimal monto_pagado_efectivo
+        varchar estado
+        varchar motivo_cancelacion
+        bigint usuario_id FK
+    }
+
+    VENTA_LINEA {
+        bigint id PK
+        bigint venta_id FK
+        bigint referencia_id FK
+        decimal cantidad
+        decimal precio_unitario
+        decimal costo_historico_unitario
+        decimal subtotal
+    }
+
+    DEVOLUCION {
+        bigint id PK
+        varchar consecutivo UK
+        bigint venta_id FK "nullable"
+        datetime fecha_hora
+        varchar tipo_devolucion
+        varchar motivo
+        varchar estado
+        bigint usuario_id FK
+    }
+
+    DEVOLUCION_LINEA {
+        bigint id PK
+        bigint devolucion_id FK
+        bigint referencia_id FK
+        decimal cantidad
+        decimal costo_unitario_aplicado
+    }
+
+    AJUSTE_INVENTARIO {
+        bigint id PK
+        varchar consecutivo UK
+        bigint referencia_id FK
+        varchar tipo_ajuste
+        decimal cantidad
+        decimal costo_unitario_referencia
+        varchar motivo
+        datetime fecha_hora
+        bigint usuario_autorizo_id FK
+    }
+
+    COMPROBANTE_CONSECUTIVO {
+        bigint id PK
+        varchar tipo_documento UK
+        bigint ultimo_numero
+        varchar prefijo
+    }
+
+    AUDITORIA_LOG {
+        bigint id PK
+        bigint usuario_id FK
+        datetime fecha_hora
+        varchar modulo
+        varchar accion
+        text descripcion
+    }

@@ -1,0 +1,31 @@
+# Maven / Java
+**/target/
+**/*.class
+**/*.jar
+**/*.war
+
+# Node / React
+**/node_modules/
+**/dist/
+**/build/
+.npm
+npm-debug.log*
+
+# IDEs & System
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
+Thumbs.db
+
+# Logs & Environment
+*.log
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

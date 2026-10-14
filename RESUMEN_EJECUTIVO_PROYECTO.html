@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resumen Ejecutivo Integral — Sistema de Inventario Ferretería</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --primary: #1565c0;
+      --primary-dark: #0d47a1;
+      --secondary: #e65100;
+      --success: #2e7d32;
+      --bg: #f8fafc;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 50px 60px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    }
+
+    .header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 25px;
+      margin-bottom: 35px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .header-title h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .header-title p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .badge-status {
+      background: #ecfdf5;
+      color: #065f46;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      border: 1px solid #a7f3d0;
+      display: inline-block;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 35px 0 15px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-left: 4px solid var(--primary);
+      padding-left: 12px;
+    }
+
+    .prompt-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 25px;
+      background: #ffffff;
+      transition: all 0.2s ease;
+    }
+
+    .prompt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .prompt-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .tag {
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .role-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      font-style: italic;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-bottom: 15px;
+    }
+
+    li {
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .artifacts-box {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      border: 1px dashed #cbd5e1;
+    }
+
+    .artifacts-box strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .artifacts-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .artifact-item {
+      font-family: 'JetBrains Mono', monospace;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #334155;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    .highlight-success {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding-top: 25px;
+      margin-top: 40px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+        padding: 20px;
+        max-width: 100%;
+      }
+      .prompt-card {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <div class="header-title">
+        <h1>Sistema de Gestión de Inventario para Ferretería</h1>
+        <p>Informe Ejecutivo Consolidado — Ciclo de Vida Completo (Prompts 1 a 7)</p>
+        <p style="margin-top: 4px;">Contexto: Sede Única | Moneda: COP | Base: MySQL 8.0 | Stack: Java 21 + Spring Boot 3 + React 18</p>
+      </div>
+      <div>
+        <span class="badge-status">Estado: 100% Completado</span>
+      </div>
+    </div>
+
+    <div class="section-title">
+      Desglose Técnico: Qué generó cada Prompt en el Proyecto
+    </div>
+
+    <!-- PROMPT 1 -->
+    <div class="prompt-card">
+      <div class="prompt-header">
+        <span class="prompt-title">PROMPT 1: Planificación y Levantamiento Formal de Requisitos</span>
+        <span class="tag">Etapa 1 — Requisitos</span>
+      </div>
+      <div class="role-text">Rol asumido: Analista de Sistemas e Ingeniero de Requisitos (ISO 29148 / ISO 25010)</div>
+      <p style="font-size: 14px; margin-bottom: 10px;">
+        <strong>¿Qué permitió crear este prompt?</strong>
+      </p>
+      <ul>
+        <li>Definición formal del problema: desabastecimiento, descalces de inventario y pérdida de trazabilidad en ferreterías de mostrador.</li>
+        <li>Consolidación estricta de las <strong>12 Reglas de Negocio Oficiales (RN-01 a RN-12)</strong>: bloqueo de stock negativo (RN-01), desactivación lógica de productos con historial (RN-02), compras completas (RN-03), Costo Promedio Ponderado (RN-04), cliente obligatorio en ventas (RN-05), pago en efectivo (RN-06), reincorporación de devoluciones (RN-07) y ajustes de stock exclusivos para Administrador (RN-08).</li>
+        <li>Matriz preliminar de permisos clasificando privilegios entre <code>ADMINISTRADOR</code> y <code>USUARIO_OPERATIVO</code>.</li>
+        <li>Catálogo de 12 Casos de Uso con flujos principales, alternativas y manejo de errores.</li>
+        <li>Criterios de aceptación objetivos en formato <em>Dado / Cuando / Entonces</em> (Given / When / Then).</li>
+      </ul>
+      <div class="artifacts-box">
+        <strong>Artefactos Entregados en <code>docs/etapa-1-requisitos/</code>:</strong>
+        <div class="artifacts-list">
+          <span class="artifact-item">01_planificacion_y_alcance.md</span>
+          <span class="artifact-item">02_actores_y_mapa_de_interesados.md</span>
+          <span class="artifact-item">03_especificacion_de_requisitos.md</span>
+          <span class="artifact-item">04_reglas_de_negocio.md</span>
+          <span class="artifact-item">05_casos_de_uso_y_procesos.md</span>
+          <span class="artifact-item">06_matriz_de_permisos.md</span>
+          <span class="artifact-item">07_criterios_de_aceptacion.md</span>
+          <span class="artifact-item">08_riesgos_y_decisiones_pendientes.md</span>
+          <span class="artifact-item">09_matriz_de_trazabilidad.md</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMPT 2 -->
+    <div class="prompt-card">
+      <div class="prompt-header">
+        <span class="prompt-title">PROMPT 2: Diseño Técnico y Arquitectónico del Sistema</span>
+        <span class="tag">Etapa 2 — Diseño</span>
+      </div>
+      <div class="role-text">Rol asumido: Arquitecto de Software y Diseñador de Sistemas</div>
+      <p style="font-size: 14px; margin-bottom: 10px;">
+        <strong>¿Qué permitió crear este prompt?</strong>
+      </p>
+      <ul>
+        <li>Arquitectura tradicional por capas: <code>Controller → Service → Repository → MySQL</code> en paquetes desacoplados.</li>
+        <li>Separación obligatoria en dos repositorios independientes: <code>backend/</code> y <code>frontend/</code> (sin monorepo).</li>
+        <li>Modelo Entidad-Relación y diagrama Mermaid con 16 tablas relacionales.</li>
+        <li>Diccionario de datos completo para MySQL 8.0: tipos <code>DECIMAL(15,2)</code> para COP, <code>DECIMAL(12,3)</code> para inventario y <code>DECIMAL(15,4)</code> para CPP (prohibición de FLOAT y DOUBLE).</li>
+        <li>Catálogo completo de endpoints REST y DTOs, adoptando el estándar <strong>RFC 9457 (ProblemDetail)</strong> para respuestas de error.</li>
+        <li>6 Diagramas de secuencia de flujos críticos: Login, Venta con bloqueo pesimista, Compra con CPP, Devoluciones, Ajuste manual y Cancelación.</li>
+        <li>Diseño de seguridad: sesiones web en servidor (<code>HttpSession</code>), cookies <code>JSESSIONID</code> con <code>HttpOnly</code>/<code>SameSite</code>, protección CSRF y contraseñas con BCrypt.</li>
+      </ul>
+      <div class="artifacts-box">
+        <strong>Artefactos Entregados en <code>docs/etapa-2-diseno/</code>:</strong>
+        <div class="artifacts-list">
+          <span class="artifact-item">01_diseno_arquitectura.md</span>
+          <span class="artifact-item">02_modelo_entidad_relacion.md</span>
+          <span class="artifact-item">02_modelo_entidad_relacion.mmd</span>
+          <span class="artifact-item">03_diccionario_datos_mysql.md</span>
+          <span class="artifact-item">04_diseno_api_rest.md</span>
+          <span class="artifact-item">05_diagramas_secuencia.md</span>
+          <span class="artifact-item">06_diseno_frontend.md</span>
+          <span class="artifact-item">07_diseno_seguridad.md</span>
+          <span class="artifact-item">08_estructura_repositorios.md</span>
+          <span class="artifact-item">09_registro_decisiones_tecnicas.md</span>
+          <span class="artifact-item">10_matriz_trazabilidad_diseno.md</span>
+          <span class="artifact-item">11_riesgos_y_pendientes_diseno.md</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMPT 3 -->
+    <div class="prompt-card">
+      <div class="prompt-header">
+        <span class="prompt-title">PROMPT 3: Planificación de Implementación y Preparación Técnica (Scaffolding)</span>
+        <span class="tag">Etapa 3 — Scaffolding</span>
+      </div>
+      <div class="role-text">Rol asumido: Ingeniero de Software Senior y Responsable Técnico</div>
+      <p style="font-size: 14px; margin-bottom: 10px;">
+        <strong>¿Qué permitió crear este prompt?</strong>
+      </p>
+      <ul>
+        <li>Verificación e instalación de herramientas base: Java 21 LTS (Eclipse Temurin) y Maven 3.9.9 en Windows.</li>
+        <li>Estructuración de paquetes Java bajo <code>com.ferreteria.inventario</code> (config, security, shared, auth, user, catalog, customer, supplier, inventory, purchase, sale, returns, document, reporting).</li>
+        <li>Configuración de perfiles externos en backend: <code>application.yml</code>, <code>application-dev.yml</code>, <code>application-test.yml</code> y <code>application-prod.yml</code>.</li>
+        <li>Seguridad base con Spring Security 6: sesiones de servidor, CORS con credenciales, protección CSRF y endpoint de salud <code>/api/v1/health</code>.</li>
+        <li>Estructura modular del frontend React con Vite: router, tema MUI, Axios centralizado con envío automático de cookies e inyección de token <code>X-XSRF-TOKEN</code>.</li>
+        <li>Verificación técnica inicial: pruebas de contexto de Spring Boot aprobadas y build de producción de Vite exitoso en 3.16s.</li>
+      </ul>
+      <div class="artifacts-box">
+        <strong>Artefactos Entregados:</strong>
+        <div class="artifacts-list">
+          <span class="artifact-item">backend/pom.xml</span>
+          <span class="artifact-item">backend/README.md</span>
+          <span class="artifact-item">frontend/package.json</span>
+          <span class="artifact-item">frontend/README.md</span>
+          <span class="artifact-item">docs/etapa-3-preparacion/01_plan_implementacion_detallado.md</span>
+          <span class="artifact-item">docs/etapa-3-preparacion/04_informe_evidencias_pruebas.md</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMPT 4 -->
+    <div class="prompt-card">
+      <div class="prompt-header">
+        <span class="prompt-title">PROMPT 4: Implementación Completa, Integración y Entrega Funcional</span>
+        <span class="tag">Etapa 4 — Desarrollo Funcional</span>
+      </div>
+      <div class="role-text">Rol asumido: Equipo Completo de Desarrollo Senior (Backend Java, Frontend React, DBA)</div>
+      <p style="font-size: 14px; margin-bottom: 10px;">
+        <strong>¿Qué permitió crear este prompt?</strong>
+      </p>
+      <ul>
+        <li><strong>Base de Datos Relacional:</strong> Scripts <code>01_schema.sql</code> (16 tablas) y <code>02_initial_data.sql</code> con datos sintéticos completos.</li>
+        <li><strong>Núcleo de Inventario Atómico:</strong> Implementación de <code>descontarStockConBloqueo</code> con <code>SELECT ... FOR UPDATE</code> en <code>InventarioSaldoRepository</code>, bloqueando compras/ventas simultáneas para prevenir saldos negativos (RN-01).</li>
+        <li><strong>Kárdex Inmutable:</strong> Registro cronológico de movimientos de solo inserción (compra, venta, devolución, ajuste).</li>
+        <li><strong>Compras y Valoración CPP:</strong> Recepción en 1 paso y recálculo matemático automático del Costo Promedio Ponderado (RN-03, RN-04).</li>
+        <li><strong>Ventas de Mostrador (POS):</strong> Asociación obligatoria con cliente registrado (RN-05), cobro en efectivo de contado (RN-06), congelamiento del costo histórico en líneas y cálculo de cambio.</li>
+        <li><strong>Devoluciones de Clientes:</strong> Modalidad vinculada (reingresa a costo histórico) y no vinculada (reingresa a CPP vigente) (RN-07).</li>
+        <li><strong>Ajustes de Inventario:</strong> Exclusivos para Administrador con motivo documentado y auditoría inmutable (RN-08, RN-11).</li>
+        <li><strong>Frontend Completo en React:</strong> 12 pantallas funcionales (Login, Dashboard, POS Mostrador, Historial de Ventas, Recepción de Compras, Historial de Compras, Inventario/Kárdex, Catálogo, Terceros, Devoluciones, Auditoría y Usuarios).</li>
+      </ul>
+      <div class="artifacts-box">
+        <strong>Artefactos Entregados en <code>docs/etapa-4-implementacion/</code> y Código:</strong>
+        <div class="artifacts-list">
+          <span class="artifact-item">01_schema.sql</span>
+          <span class="artifact-item">02_initial_data.sql</span>
+          <span class="artifact-item">10 Controllers REST</span>
+          <span class="artifact-item">12 Servicios de Negocio</span>
+          <span class="artifact-item">16 Repositorios JPA</span>
+          <span class="artifact-item">12 Vistas en React</span>
+          <span class="artifact-item">docs/etapa-4-implementacion/01_informe_implementacion_funcional.md</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMPT 5 -->
+    <div class="prompt-card">
+      <div class="prompt-header">
+        <span class="prompt-title">PROMPT 5: Testing Integral, Aseguramiento de Calidad y Estabilización</span>
+        <span class="tag">Etapa 5 — QA & Testing</span>
+      </div>
+      <div class="role-text">Rol asumido: Especialista en QA, Automatización de Pruebas y Seguridad Web</div>
+      <p style="font-size: 14px; margin-bottom: 10px;">
+        <strong>¿Qué permitió crear este prompt?</strong>
+      </p>
+      <ul>
+        <li><strong>Prueba de Concurrencia Multihilo (<code>ConcurrencyInventoryTest</code>):</strong> Simulación de 10 hilos simultáneos compitiendo por 5 unidades en stock. Resultado: 5 ventas exitosas, 5 rechazadas por falta de existencias y saldo final exactamente en 0.000 (0 stock negativo demostrado).</li>
+        <li><strong>Pruebas de Seguridad y RBAC (<code>SecurityRbacTest</code>):</strong> Comprobación de rechazo 401 sin sesión, rechazo 403 para usuarios operativos en ajustes manuales, administración de usuarios y consulta de auditoría, y bloqueo 403 ante peticiones sin token CSRF.</li>
+        <li><strong>Pruebas de Integridad de Reglas de Negocio (<code>ReturnsAndAdjustmentsTest</code>):</strong> Bloqueo de devoluciones mayores a la cantidad vendida y bloqueo de cancelación de ventas con devoluciones activas.</li>
+        <li><strong>Pruebas Matemáticas de CPP:</strong> Verificación del Costo Promedio Ponderado ($2.500 COP tras compra sucesiva).</li>
+        <li><strong>Suite E2E con Playwright:</strong> Configuración de <code>playwright.config.js</code> y 6 flujos de usuario automatizados.</li>
+        <li><strong>Resultado Global de Testing:</strong> <strong>20 pruebas ejecutadas en Maven, 20 aprobadas (100% de éxito, 0 fallos)</strong>.</li>
+      </ul>
+      <div class="artifacts-box">
+        <strong>Artefactos Entregados en <code>docs/etapa-5-testing/</code>:</strong>
+        <div class="artifacts-list">
+          <span class="artifact-item">01_plan_pruebas_y_trazabilidad.md</span>
+          <span class="artifact-item">02_informe_tecnico_qa.md</span>
+          <span class="artifact-item">ConcurrencyInventoryTest.java</span>
+          <span class="artifact-item">SecurityRbacTest.java</span>
+          <span class="artifact-item">ReturnsAndAdjustmentsTest.java</span>
+          <span class="artifact-item">playwright.config.js</span>
+          <span class="artifact-item">ferreteria.spec.js</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMPT 6 -->
+    <div class="prompt-card">
+      <div class="prompt-header">
+        <span class="prompt-title">PROMPT 6: Despliegue, Configuración, Validación y Puesta en Marcha</span>
+        <span class="tag">Etapa 6 — Despliegue $0 COP</span>
+      </div>
+      <div class="role-text">Rol asumido: Ingeniero Senior de Despliegue, Infraestructura Administrada y DevOps</div>
+      <p style="font-size: 14px; margin-bottom: 10px;">
+        <strong>¿Qué permitió crear este prompt?</strong>
+      </p>
+      <ul>
+        <li>Cumplimiento estricto del presupuesto: <strong>COP $0 de costos recurrentes</strong> garantizados mediante plataformas gratuitas (Render PaaS, Vercel y Aiven/Alwaysdata MySQL).</li>
+        <li>Imágenes de contenedor Docker multi-stage optimizadas: <code>backend/Dockerfile</code> (Eclipse Temurin JRE 21 Alpine con usuario no-root) y <code>frontend/Dockerfile</code> (Nginx Alpine con proxy inverso y fallback SPA).</li>
+        <li>Archivo <code>docker-compose.yml</code> en la raíz del proyecto para despliegue local o en servidor de demostración de un solo comando (<code>docker compose up -d</code>) con volumen persistente <code>ferreteria_mysql_data</code>.</li>
+        <li>Script de copias de seguridad automatizadas con <code>mysqldump</code>, compresión gzip y retención de 7 días (<code>backup_ferreteria.sh</code>).</li>
+        <li>Manual operativo completo de arranque, diagnóstico de logs, conectividad y protocolo de reversión (<em>rollback</em>).</li>
+      </ul>
+      <div class="artifacts-box">
+        <strong>Artefactos Entregados en <code>docs/etapa-6-despliegue/</code>:</strong>
+        <div class="artifacts-list">
+          <span class="artifact-item">docker-compose.yml</span>
+          <span class="artifact-item">backend/Dockerfile</span>
+          <span class="artifact-item">frontend/Dockerfile</span>
+          <span class="artifact-item">frontend/nginx.conf</span>
+          <span class="artifact-item">01_evaluacion_alojamiento_y_costos.md</span>
+          <span class="artifact-item">02_plan_tecnico_despliegue.md</span>
+          <span class="artifact-item">04_procedimiento_copias_seguridad.md</span>
+          <span class="artifact-item">05_manual_operacion_mantenimiento.md</span>
+          <span class="artifact-item">06_informe_final_despliegue.md</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMPT 7 -->
+    <div class="prompt-card">
+      <div class="prompt-header">
+        <span class="prompt-title">PROMPT 7: Hardening, Automatización, Observabilidad y Mejora Continua</span>
+        <span class="tag">Etapa 7 — Cierre y Excelencia</span>
+      </div>
+      <div class="role-text">Rol asumido: Equipo Multidisciplinario de Ingeniería (Arquitecto, Dev, QA, AppSec, DevOps y Observabilidad)</div>
+      <p style="font-size: 14px; margin-bottom: 10px;">
+        <strong>¿Qué permitió crear este prompt?</strong>
+      </p>
+      <ul>
+        <li><strong>Pipeline Automatizado de CI/CD:</strong> Archivo <code>.github/workflows/ci.yml</code> con jobs paralelos para compilación/pruebas de backend en Java 21 y build/lint de frontend en Node 20 con bloqueo automático de publicación ante fallos.</li>
+        <li><strong>Internacionalización Bilingüe (i18n):</strong> Catálogo <code>src/utils/i18n.js</code>, proveedor <code>LanguageProvider.jsx</code> y selector accesible ES/EN en el encabezado (Español base, Inglés alternativo).</li>
+        <li><strong>Pruebas de Carga con k6:</strong> Script <code>tests/load/k6-load-test.js</code> para evaluación de latencia y saturación con 20 usuarios virtuales concurrentes.</li>
+        <li><strong>Dashboard Integrado de Observabilidad:</strong> Vista <code>ObservabilityDashboard.jsx</code> para el Administrador que reporta salud del backend, latencia RTT, tasas de error HTTP, estado de CI/CD y trazabilidad de las 7 etapas del ciclo de vida.</li>
+        <li><strong>Matriz de Aceptación Global E7:</strong> Evaluación formal de los 25 criterios globales (E7-01 a E7-25) con dictamen de <strong>100% APROBADO</strong>.</li>
+      </ul>
+      <div class="artifacts-box">
+        <strong>Artefactos Entregados en <code>docs/etapa-7-hardening/</code>:</strong>
+        <div class="artifacts-list">
+          <span class="artifact-item">.github/workflows/ci.yml</span>
+          <span class="artifact-item">src/utils/i18n.js</span>
+          <span class="artifact-item">LanguageProvider.jsx</span>
+          <span class="artifact-item">ObservabilityDashboard.jsx</span>
+          <span class="artifact-item">tests/load/k6-load-test.js</span>
+          <span class="artifact-item">01_matriz_aceptacion_global_e7.md</span>
+          <span class="artifact-item">02_informe_final_etapa7.md</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      Resumen Métrico y Estado Final del Sistema
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Indicador de Calidad</th>
+          <th>Meta Requerida</th>
+          <th>Resultado Obtenido</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Pruebas de Backend (JUnit 5 + MockMvc)</td>
+          <td>Flujos críticos cubiertos</td>
+          <td>20 / 20 Pruebas Aprobadas (0 errores)</td>
+          <td class="highlight-success">Aprobado (100%)</td>
+        </tr>
+        <tr>
+          <td>Control de Concurrencia (Anti-Stock Negativo)</td>
+          <td>0 existencias negativas</td>
+          <td>Verificado con 10 hilos simultáneos (Saldo final = 0.000)</td>
+          <td class="highlight-success">Aprobado</td>
+        </tr>
+        <tr>
+          <td>Cálculo de Costo Promedio Ponderado</td>
+          <td>Exactitud matemática</td>
+          <td>Fórmula ponderada con escala decimal fija probada</td>
+          <td class="highlight-success">Aprobado</td>
+        </tr>
+        <tr>
+          <td>Build de Producción Frontend (Vite)</td>
+          <td>0 errores de empaquetado</td>
+          <td>1.191 módulos transformados en 3.37s</td>
+          <td class="highlight-success">Aprobado</td>
+        </tr>
+        <tr>
+          <td>Seguridad de Autenticación</td>
+          <td>Sesiones de servidor (No JWT)</td>
+          <td>HttpSession + Cookies JSESSIONID + CSRF Token</td>
+          <td class="highlight-success">Aprobado</td>
+        </tr>
+        <tr>
+          <td>Presupuesto Recurrente de Infraestructura</td>
+          <td>COP $0 mensuales</td>
+          <td>COP $0 verificado en plataformas gratuitas</td>
+          <td class="highlight-success">Aprobado</td>
+        </tr>
+        <tr>
+          <td>Pipeline Automatizado CI/CD</td>
+          <td>GitHub Actions funcional</td>
+          <td>.github/workflows/ci.yml con backend, frontend y deploy</td>
+          <td class="highlight-success">Aprobado</td>
+        </tr>
+        <tr>
+          <td>Criterios Globales de Aceptación (E7-01 a E7-25)</td>
+          <td>25 criterios evaluados</td>
+          <td>25 / 25 Criterios Cumplidos</td>
+          <td class="highlight-success">Aprobado (100%)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer">
+      <p><strong>Ferretería El Tornillo Central — Demostración Académica Sede Única</strong></p>
+      <p>Documento generado el 13 de octubre de 2026 | Listo para impresión en PDF con Ctrl + P o navegador Edge/Chrome</p>
+    </div>
+  </div>
+
+</body>
+</html>
