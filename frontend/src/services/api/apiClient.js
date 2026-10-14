@@ -3,7 +3,7 @@ import axios from 'axios';
 /**
  * Cliente HTTP centralizado con soporte obligatorio para:
  * - Sesiones de servidor mediante cookies (withCredentials = true)
- * - Inyección automática de token CSRF (X-XSRF-TOKEN)
+ * - Inyección automática de token CSRF (X-XSRF-TOKEN) con bootstrap explícito
  * - Manejo consistente de errores ProblemDetail (RFC 9457)
  */
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
@@ -19,15 +19,37 @@ const apiClient = axios.create({
 
 // Función auxiliar para extraer el valor de la cookie XSRF-TOKEN
 const getCsrfTokenFromCookie = () => {
+  if (typeof document === 'undefined') return null;
   const match = document.cookie.match(new RegExp('(^|;\\s*)XSRF-TOKEN=([^;]*)'));
   return match ? decodeURIComponent(match[2]) : null;
 };
 
-// Interceptor para inyectar token CSRF en métodos mutativos
+// Bootstrap explícito: si no hay cookie CSRF, pedirla al backend.
+// El endpoint GET /auth/csrf pasa por el filtro CSRF y emite Set-Cookie: XSRF-TOKEN.
+let csrfBootstrapInFlight = null;
+const ensureCsrfToken = async () => {
+  if (getCsrfTokenFromCookie()) return;
+  if (!csrfBootstrapInFlight) {
+    csrfBootstrapInFlight = axios
+      .get(`${baseURL}/auth/csrf`, { withCredentials: true })
+      .catch(() => null)
+      .finally(() => {
+        csrfBootstrapInFlight = null;
+      });
+  }
+  await csrfBootstrapInFlight;
+};
+
+// Interceptor ASÍNCRONO: garantiza token CSRF antes de cualquier petición mutativa
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const method = config.method?.toUpperCase();
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      // No pedir token para el propio login (es público e ignorado por CSRF)
+      const isLogin = config.url?.includes('/auth/login');
+      if (!isLogin) {
+        await ensureCsrfToken();
+      }
       const csrfToken = getCsrfTokenFromCookie();
       if (csrfToken) {
         config.headers['X-XSRF-TOKEN'] = csrfToken;
@@ -50,9 +72,11 @@ apiClient.interceptors.response.use(
           window.location.href = '/login?expired=true';
         }
       }
+      // 403: NO redirigir; dejar que cada pantalla muestre el detalle del backend
     }
     return Promise.reject(error);
   }
 );
 
 export default apiClient;
+export { ensureCsrfToken, getCsrfTokenFromCookie };

@@ -103,13 +103,17 @@ export const ReturnsPage = () => {
       setError('Debe ingresar un motivo de al menos 5 caracteres');
       return;
     }
+    if (tipoDevolucion === 'VINCULADA' && !selectedVenta) {
+      setError('Para una devolución VINCULADA debe seleccionar la venta original');
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
 
+      // El backend deriva el tipo (VINCULADA/NO_VINCULADA) desde ventaId; no se envía tipoDevolucion.
       const payload = {
-        tipoDevolucion,
         ventaId: tipoDevolucion === 'VINCULADA' ? selectedVenta?.id : null,
         clienteId: selectedCli?.id || null,
         motivo,

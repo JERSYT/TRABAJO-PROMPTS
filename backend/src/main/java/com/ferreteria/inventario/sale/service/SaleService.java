@@ -97,53 +97,60 @@ public class SaleService {
 
         String consecutivo = sequenceService.obtenerSiguienteConsecutivo("VENTA");
 
+        // Paso 1: pre-validar líneas contra catálogo y calcular total SIN mutar stock.
+        // Esto evita bloquear filas y generar movimientos si el pago es insuficiente (RN-06).
+        BigDecimal total = BigDecimal.ZERO;
+        java.util.List<Referencia> refsValidadas = new java.util.ArrayList<>();
+        for (VentaLineaRequest lr : request.getLineas()) {
+            Referencia ref = catalogService.obtenerEntidadPorId(lr.getReferenciaId());
+            if (!ref.isActivo()) {
+                throw new BusinessException("El producto " + ref.getCodigoBarras() + " está inactivo y no puede ser vendido");
+            }
+            BigDecimal subtotal = lr.getCantidad().multiply(ref.getPrecioVenta()).setScale(2, RoundingMode.HALF_UP);
+            total = total.add(subtotal);
+            refsValidadas.add(ref);
+        }
+
+        // Regla RN-06: Pago en efectivo de contado (validado ANTES de tocar el inventario)
+        if (request.getMontoPagadoEfectivo().compareTo(total) < 0) {
+            throw new BusinessException("El monto entregado en efectivo ($" + request.getMontoPagadoEfectivo() +
+                    ") es inferior al total a pagar ($" + total + ")");
+        }
+
+        // Paso 2: persistir cabecera primero para obtener ID real y trazabilidad en Kárdex
         Venta venta = new Venta();
         venta.setConsecutivo(consecutivo);
         venta.setCliente(cliente);
         venta.setUsuario(usuario);
         venta.setEstado("COMPLETADA");
         venta.setFechaHora(LocalDateTime.now());
+        venta.setSubtotal(total);
+        venta.setTotal(total);
+        venta.setMontoPagadoEfectivo(request.getMontoPagadoEfectivo());
+        venta.setCambioDevuelto(request.getMontoPagadoEfectivo().subtract(total));
+        Venta ventaPersistida = ventaRepository.saveAndFlush(venta);
 
-        BigDecimal total = BigDecimal.ZERO;
-
-        // Construir líneas validando precios de catálogo
-        for (VentaLineaRequest lr : request.getLineas()) {
-            Referencia ref = catalogService.obtenerEntidadPorId(lr.getReferenciaId());
-            if (!ref.isActivo()) {
-                throw new BusinessException("El producto " + ref.getCodigoBarras() + " está inactivo y no puede ser vendido");
-            }
-
+        // Paso 3: descontar stock con bloqueo pesimista usando el ID real de la venta (RN-01, RN-04)
+        for (int i = 0; i < request.getLineas().size(); i++) {
+            VentaLineaRequest lr = request.getLineas().get(i);
+            Referencia ref = refsValidadas.get(i);
             BigDecimal precioUnitario = ref.getPrecioVenta();
             BigDecimal subtotal = lr.getCantidad().multiply(precioUnitario).setScale(2, RoundingMode.HALF_UP);
-            total = total.add(subtotal);
 
-            // Descontar del inventario con bloqueo pesimista contra stock negativo (RN-01)
-            // y capturar el costo histórico unitario vigente en este instante (RN-04)
             BigDecimal costoHistorico = inventoryService.descontarStockConBloqueo(
                     ref.getId(),
                     lr.getCantidad(),
                     "VENTA",
-                    0L, // Se actualiza tras el save
+                    ventaPersistida.getId(),
                     "Venta en mostrador " + consecutivo,
                     usuario
             );
 
             VentaLinea linea = new VentaLinea(ref, lr.getCantidad(), precioUnitario, costoHistorico, subtotal);
-            venta.addLinea(linea);
+            ventaPersistida.addLinea(linea);
         }
 
-        // Regla RN-06: Pago en efectivo de contado
-        if (request.getMontoPagadoEfectivo().compareTo(total) < 0) {
-            throw new BusinessException("El monto entregado en efectivo ($" + request.getMontoPagadoEfectivo() +
-                    ") es inferior al total a pagar ($" + total + ")");
-        }
-
-        venta.setSubtotal(total);
-        venta.setTotal(total);
-        venta.setMontoPagadoEfectivo(request.getMontoPagadoEfectivo());
-        venta.setCambioDevuelto(request.getMontoPagadoEfectivo().subtract(total));
-
-        Venta ventaGuardada = ventaRepository.save(venta);
+        Venta ventaGuardada = ventaRepository.save(ventaPersistida);
 
         auditService.registrarEvento(usuario, "VENTAS", "REGISTRAR_VENTA",
                 "Venta registrada " + consecutivo + " a cliente " + cliente.getRazonSocial() + " por total $" + total);

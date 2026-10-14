@@ -52,7 +52,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(requestHandler)
-                .ignoringRequestMatchers("/api/v1/health", "/actuator/health", "/api/v1/auth/login", "/api/v1/auth/csrf")
+                .ignoringRequestMatchers("/api/v1/health", "/actuator/health", "/api/v1/auth/login")
             )
             .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
             .sessionManagement(session -> session

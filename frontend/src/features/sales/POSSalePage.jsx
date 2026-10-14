@@ -163,7 +163,19 @@ export const POSSalePage = () => {
       const refRes = await apiClient.get('/catalog/references?activo=true&size=100');
       setReferencias(refRes.data.content || []);
     } catch (err) {
-      setError(err.response?.data?.detail || err.response?.data?.message || err.message || 'Error al procesar la venta');
+      const status = err.response?.status;
+      const detail =
+        err.response?.data?.detail || err.response?.data?.message || err.response?.data?.title;
+      if (status === 403) {
+        setError(
+          (detail ? `${detail} ` : '') +
+            '(HTTP 403: sesión sin token CSRF o sin permisos. Recargue la página y vuelva a iniciar sesión si persiste.)'
+        );
+      } else if (status === 401) {
+        setError('Sesión expirada o no autenticada (HTTP 401). Será redirigido al inicio de sesión.');
+      } else {
+        setError(detail || err.message || 'Error al procesar la venta');
+      }
     } finally {
       setLoading(false);
     }

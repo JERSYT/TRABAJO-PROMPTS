@@ -135,20 +135,25 @@ public class ReturnService {
 
             DevolucionLinea linea = new DevolucionLinea(ref, lr.getCantidad(), costoAplicado);
             devolucion.addLinea(linea);
+        }
 
+        // Persistir primero para obtener ID real y usarlo en el Kárdex (trazabilidad RN-07)
+        Devolucion devPersistida = devolucionRepository.saveAndFlush(devolucion);
+
+        for (DevolucionLinea linea : devPersistida.getLineas()) {
             // Reincorporar automáticamente al inventario disponible (RN-07)
             inventoryService.reintegrarStock(
-                    ref.getId(),
-                    lr.getCantidad(),
-                    costoAplicado,
+                    linea.getReferencia().getId(),
+                    linea.getCantidad(),
+                    linea.getCostoUnitarioAplicado(),
                     "DEVOLUCION",
-                    0L,
+                    devPersistida.getId(),
                     "Reintegro por devolución " + consecutivo + ": " + request.getMotivo(),
                     usuario
             );
         }
 
-        Devolucion devGuardada = devolucionRepository.save(devolucion);
+        Devolucion devGuardada = devolucionRepository.save(devPersistida);
 
         auditService.registrarEvento(usuario, "DEVOLUCIONES", "REGISTRAR_DEVOLUCION",
                 "Devolución registrada " + consecutivo + " (" + devolucion.getTipoDevolucion() + "). Motivo: " + request.getMotivo());
