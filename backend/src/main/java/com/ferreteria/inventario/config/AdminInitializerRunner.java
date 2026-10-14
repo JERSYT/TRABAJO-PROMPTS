@@ -98,31 +98,35 @@ public class AdminInitializerRunner implements CommandLineRunner {
         Rol rolOperativo = rolRepository.findByNombre("ROLE_USUARIO_OPERATIVO")
                 .orElseGet(() -> rolRepository.save(new Rol(null, "ROLE_USUARIO_OPERATIVO", "Usuario operativo de mostrador")));
 
-        // 2. Primer usuario Administrador
-        if (!usuarioRepository.existsByUsername(initialAdminUsername)) {
-            Usuario admin = new Usuario();
-            admin.setUsername(initialAdminUsername);
-            admin.setPasswordHash(passwordEncoder.encode(initialAdminPassword));
-            admin.setNombreCompleto("Administrador General de la Ferretería");
-            admin.setEmail("admin@ferreteria.local");
-            admin.setActivo(true);
-            admin.setRoles(Set.of(rolAdmin));
-            usuarioRepository.save(admin);
-            log.info("Usuario Administrador inicial aprovisionado con éxito: {}", initialAdminUsername);
-        }
+        // 2. Primer usuario Administrador (Asegurar siempre credenciales válidas)
+        Usuario admin = usuarioRepository.findByUsername(initialAdminUsername)
+                .orElseGet(() -> {
+                    Usuario u = new Usuario();
+                    u.setUsername(initialAdminUsername);
+                    return u;
+                });
+        admin.setPasswordHash(passwordEncoder.encode(initialAdminPassword));
+        admin.setNombreCompleto("Administrador General de la Ferretería");
+        admin.setEmail("admin@ferreteria.local");
+        admin.setActivo(true);
+        admin.setRoles(Set.of(rolAdmin));
+        usuarioRepository.save(admin);
+        log.info("Usuario Administrador configurado con éxito: {}", initialAdminUsername);
 
-        // Usuario Operativo demostrativo
-        if (!usuarioRepository.existsByUsername("operador_mostrador")) {
-            Usuario operador = new Usuario();
-            operador.setUsername("operador_mostrador");
-            operador.setPasswordHash(passwordEncoder.encode("Operador123*"));
-            operador.setNombreCompleto("Carlos Operativo de Ventas");
-            operador.setEmail("operador@ferreteria.local");
-            operador.setActivo(true);
-            operador.setRoles(Set.of(rolOperativo));
-            usuarioRepository.save(operador);
-            log.info("Usuario Operativo demostrativo aprovisionado con éxito: operador_mostrador");
-        }
+        // Usuario Operativo demostrativo (Asegurar siempre credenciales válidas)
+        Usuario operador = usuarioRepository.findByUsername("operador_mostrador")
+                .orElseGet(() -> {
+                    Usuario u = new Usuario();
+                    u.setUsername("operador_mostrador");
+                    return u;
+                });
+        operador.setPasswordHash(passwordEncoder.encode("Operador123*"));
+        operador.setNombreCompleto("Carlos Operativo de Ventas");
+        operador.setEmail("operador@ferreteria.local");
+        operador.setActivo(true);
+        operador.setRoles(Set.of(rolOperativo));
+        usuarioRepository.save(operador);
+        log.info("Usuario Operativo configurado con éxito: operador_mostrador");
 
         // 3. Consecutivos iniciales (RN-12)
         consecutivoRepository.findByTipoDocumento("VENTA")

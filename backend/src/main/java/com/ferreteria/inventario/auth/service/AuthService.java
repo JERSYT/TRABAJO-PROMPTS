@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
+    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     public AuthService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, AuditService auditService) {
         this.usuarioRepository = usuarioRepository;
@@ -63,6 +65,7 @@ public class AuthService {
 
         HttpSession session = httpRequest.getSession(true);
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+        securityContextRepository.saveContext(context, httpRequest, httpResponse);
 
         auditService.registrarEvento(usuario, "SEGURIDAD", "INICIO_SESION", "Inicio de sesión exitoso del usuario " + usuario.getUsername());
 

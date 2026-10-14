@@ -52,11 +52,11 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Base de Datos H2 exclusivamente para pruebas rápidas de infraestructura -->
+        <!-- Base de Datos H2 para ejecución local o pruebas de infraestructura -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- OpenAPI / Swagger 3 -->
