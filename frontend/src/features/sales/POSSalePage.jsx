@@ -163,7 +163,7 @@ export const POSSalePage = () => {
       const refRes = await apiClient.get('/catalog/references?activo=true&size=100');
       setReferencias(refRes.data.content || []);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Error al procesar la venta. Verifique existencias.');
+      setError(err.response?.data?.detail || err.response?.data?.message || err.message || 'Error al procesar la venta');
     } finally {
       setLoading(false);
     }

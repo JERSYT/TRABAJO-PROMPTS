@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkActiveSession = async () => {
       try {
+        await apiClient.get('/auth/csrf').catch(() => {});
         const response = await apiClient.get('/auth/me');
         setUser(response.data);
       } catch (err) {
@@ -24,8 +25,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (username, password) => {
+    await apiClient.get('/auth/csrf').catch(() => {});
     const response = await apiClient.post('/auth/login', { username, password });
     setUser(response.data);
+    await apiClient.get('/auth/csrf').catch(() => {});
     return response.data;
   };
 

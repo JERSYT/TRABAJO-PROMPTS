@@ -58,7 +58,14 @@ public class AuthService {
                 .map(r -> new org.springframework.security.core.authority.SimpleGrantedAuthority(r.getNombre()))
                 .toList();
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(usuario.getUsername(), null, authorities);
+        org.springframework.security.core.userdetails.UserDetails principal =
+                new org.springframework.security.core.userdetails.User(
+                        usuario.getUsername(),
+                        usuario.getPasswordHash(),
+                        authorities
+                );
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(auth);
         SecurityContextHolder.setContext(context);
