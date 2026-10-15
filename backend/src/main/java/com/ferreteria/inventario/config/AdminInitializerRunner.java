@@ -241,7 +241,9 @@ public class AdminInitializerRunner implements CommandLineRunner {
             String orig = p.getNombre();
             String clean = orig
                     .replace("UÃ±a", "Uña").replace("Uã±a", "Uña")
-                    .replace("PresiÃ³n", "Presión").replace("Presiã³n", "Presión");
+                    .replace("PresiÃ³n", "Presión").replace("Presiã³n", "Presión")
+                    .replace("U??a", "Uña").replace("Presi??n", "Presión")
+                    .replace("Ua", "Uña").replace("Presin", "Presión");
             if (!clean.equals(orig)) {
                 p.setNombre(clean);
                 productoRepository.save(p);
@@ -249,7 +251,9 @@ public class AdminInitializerRunner implements CommandLineRunner {
         });
         presentacionRepository.findAll().forEach(pres -> {
             String orig = pres.getNombre();
-            String clean = orig.replace("GalÃ³n", "Galón").replace("Galã³n", "Galón");
+            String clean = orig
+                    .replace("GalÃ³n", "Galón").replace("Galã³n", "Galón")
+                    .replace("Gal??n", "Galón").replace("Galn", "Galón");
             if (!clean.equals(orig)) {
                 pres.setNombre(clean);
                 presentacionRepository.save(pres);
