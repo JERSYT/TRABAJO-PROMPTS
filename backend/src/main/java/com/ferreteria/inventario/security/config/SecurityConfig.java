@@ -44,8 +44,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
-        // Desactiva el enmascaramiento XOR para que el token de la cookie coincida directamente con el header X-XSRF-TOKEN
-        requestHandler.setCsrfRequestAttributeName(null);
 
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
@@ -98,8 +96,10 @@ public class SecurityConfig {
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
                 throws ServletException, IOException {
             CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+            if (csrfToken == null) {
+                csrfToken = (CsrfToken) request.getAttribute("_csrf");
+            }
             if (csrfToken != null) {
-                // Forzar la resolución del token diferido para que se envíe la cookie Set-Cookie: XSRF-TOKEN
                 csrfToken.getToken();
             }
             filterChain.doFilter(request, response);
