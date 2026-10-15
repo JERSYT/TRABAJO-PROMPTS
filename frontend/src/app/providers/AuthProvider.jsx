@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import apiClient from '../../services/api/apiClient';
+import apiClient, { clearCsrfToken, ensureCsrfToken } from '../../services/api/apiClient';
 
 const AuthContext = createContext(null);
 
@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkActiveSession = async () => {
       try {
-        await apiClient.get('/auth/csrf').catch(() => {});
+        await ensureCsrfToken();
         const response = await apiClient.get('/auth/me');
         setUser(response.data);
       } catch (err) {
@@ -25,10 +25,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (username, password) => {
-    await apiClient.get('/auth/csrf').catch(() => {});
+    clearCsrfToken();
     const response = await apiClient.post('/auth/login', { username, password });
     setUser(response.data);
-    await apiClient.get('/auth/csrf').catch(() => {});
+    await ensureCsrfToken();
     return response.data;
   };
 
@@ -36,6 +36,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await apiClient.post('/auth/logout');
     } finally {
+      clearCsrfToken();
       setUser(null);
       window.location.href = '/login';
     }

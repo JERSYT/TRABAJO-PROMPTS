@@ -23,12 +23,14 @@ public class AuthController {
     }
 
     @GetMapping("/csrf")
-    public ResponseEntity<Void> getCsrf(HttpServletRequest request) {
+    public ResponseEntity<java.util.Map<String, String>> getCsrf(HttpServletRequest request) {
         CsrfToken token = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-        if (token != null) {
-            token.getToken();
-        }
-        return ResponseEntity.noContent().build();
+        String tokenVal = token != null ? token.getToken() : "";
+        String headerName = token != null ? token.getHeaderName() : "X-XSRF-TOKEN";
+        return ResponseEntity.ok(java.util.Map.of(
+            "token", tokenVal,
+            "headerName", headerName
+        ));
     }
 
     @PostMapping("/login")
