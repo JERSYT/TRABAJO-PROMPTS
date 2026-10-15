@@ -6,7 +6,12 @@ import axios from 'axios';
  * - Inyección automática de token CSRF (X-XSRF-TOKEN) con bootstrap explícito
  * - Manejo consistente de errores ProblemDetail (RFC 9457)
  */
-const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+let rawBaseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+rawBaseURL = rawBaseURL.replace(/\/+$/, '');
+if (!rawBaseURL.endsWith('/api/v1')) {
+  rawBaseURL = `${rawBaseURL}/api/v1`;
+}
+const baseURL = rawBaseURL;
 
 const apiClient = axios.create({
   baseURL,
