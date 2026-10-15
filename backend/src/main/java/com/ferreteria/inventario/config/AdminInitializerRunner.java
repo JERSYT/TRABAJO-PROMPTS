@@ -109,7 +109,7 @@ public class AdminInitializerRunner implements CommandLineRunner {
         admin.setNombreCompleto("Administrador General de la Ferretería");
         admin.setEmail("admin@ferreteria.local");
         admin.setActivo(true);
-        admin.setRoles(Set.of(rolAdmin));
+        admin.setRoles(new java.util.HashSet<>(java.util.List.of(rolAdmin)));
         usuarioRepository.save(admin);
         log.info("Usuario Administrador configurado con éxito: {}", initialAdminUsername);
 
@@ -124,7 +124,7 @@ public class AdminInitializerRunner implements CommandLineRunner {
         operador.setNombreCompleto("Carlos Operativo de Ventas");
         operador.setEmail("operador@ferreteria.local");
         operador.setActivo(true);
-        operador.setRoles(Set.of(rolOperativo));
+        operador.setRoles(new java.util.HashSet<>(java.util.List.of(rolOperativo)));
         usuarioRepository.save(operador);
         log.info("Usuario Operativo configurado con éxito: operador_mostrador");
 
