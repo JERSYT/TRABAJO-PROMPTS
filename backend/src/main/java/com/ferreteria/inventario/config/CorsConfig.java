@@ -24,14 +24,19 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+        List<String> origins = new java.util.ArrayList<>(Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
-                .toList();
+                .toList());
         
-        configuration.setAllowedOrigins(origins);
+        if (!origins.contains("https://*.vercel.app")) origins.add("https://*.vercel.app");
+        if (!origins.contains("https://trabajo-prompts.vercel.app")) origins.add("https://trabajo-prompts.vercel.app");
+        if (!origins.contains("https://*.onrender.com")) origins.add("https://*.onrender.com");
+        if (!origins.contains("http://localhost:*")) origins.add("http://localhost:*");
+
+        configuration.setAllowedOriginPatterns(origins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-XSRF-TOKEN", "Accept"));
-        configuration.setExposedHeaders(List.of("X-XSRF-TOKEN"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setExposedHeaders(Arrays.asList("Set-Cookie", "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

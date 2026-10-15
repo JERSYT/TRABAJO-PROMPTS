@@ -26,13 +26,8 @@ USER appuser
 COPY --from=builder /app/target/inventario-1.0.0.jar app.jar
 
 # Configuración de variables de entorno por defecto
-ENV SPRING_PROFILES_ACTIVE=prod \
-    PORT=8080
+ENV SPRING_PROFILES_ACTIVE=prod
 
-EXPOSE 8080
+EXPOSE 8080 10000
 
-# Health check del contenedor
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD wget -q --spider http://localhost:8080/api/v1/health || exit 1
-
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Djava.security.egd=file:/dev/./urandom -Dserver.port=${PORT:-8080} -jar app.jar"]
