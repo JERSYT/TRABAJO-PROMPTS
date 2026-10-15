@@ -1,20 +1,16 @@
 # ------------------------------------------------------------------------------
 # ETAPA 1: Construcción (Maven + Java 21)
 # ------------------------------------------------------------------------------
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 WORKDIR /app
 
-# Copiar configuración Maven y dependencias primero para optimizar caché
+# Copiar configuración Maven y descargar dependencias
 COPY pom.xml ./
-COPY .mvn .mvn/
-COPY mvnw ./
+RUN mvn dependency:go-offline -B || true
 
-# Descargar dependencias de Maven
-RUN ./mvnw dependency:go-offline -B || true
-
-# Copiar código fuente y compilar
+# Copiar código fuente y compilar artefacto JAR
 COPY src ./src
-RUN ./mvnw clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B
 
 # ------------------------------------------------------------------------------
 # ETAPA 2: Runtime Ligero y Seguro
